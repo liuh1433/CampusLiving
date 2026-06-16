@@ -1,0 +1,12 @@
+node_modules/
+dist/
+.vite/
+npm-debug.log*
+vite-dev*.log
+external/
+__pycache__/
+*.pyc
+*.blend1
+assets/previews/debug-*.png
+assets/previews/fixed-*.png
+assets/previews/web-mvp-*.png
