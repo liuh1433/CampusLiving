@@ -6,6 +6,7 @@ import { createFloorCamera, createMapCamera, fitMapCameraToBox, resizeCamera } f
 import { configureFixedSceneControls, setFixedSceneTarget } from "./controls.js";
 import { createFloorView } from "./floorView.js";
 import { createPicker } from "./picking.js";
+import { createCameraAnimator, createFlightPath, computeMeshCenter } from "./cameraAnimator.js";
 
 export function createAppScene({ canvas, onStatus, onBuildingClick, onFloorClick }) {
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
@@ -30,6 +31,12 @@ export function createAppScene({ canvas, onStatus, onBuildingClick, onFloorClick
   let floorView = null;
   let mode = "map";
   let picker = null;
+  let cameraAnimator = null;
+  let pendingBuildingClick = null; // 动画完成后执行的回调
+
+  // 保存地图摄像机的原始状态，动画结束后恢复
+  let mapCameraOriginalPos = new THREE.Vector3();
+  let mapCameraOriginalTarget = new THREE.Vector3();
 
   const buildingHighlightMaterial = new THREE.MeshStandardMaterial({
     color: 0xffd48a,
@@ -37,6 +44,26 @@ export function createAppScene({ canvas, onStatus, onBuildingClick, onFloorClick
   });
 
   addLights(scene);
+
+  // 创建摄像机动画器
+  cameraAnimator = createCameraAnimator({
+    getCamera: () => activeCamera,
+    onStart: () => {
+      controls.enabled = false;
+      onStatus("摄像机飞行中...");
+    },
+    onComplete: () => {
+      controls.enabled = false;
+      onStatus("飞行完成。");
+
+      // 执行延迟的回调
+      if (pendingBuildingClick) {
+        const callback = pendingBuildingClick;
+        pendingBuildingClick = null;
+        callback();
+      }
+    },
+  });
 
   async function init() {
     onStatus("加载综合教学楼模型...");
@@ -58,9 +85,13 @@ export function createAppScene({ canvas, onStatus, onBuildingClick, onFloorClick
       setFixedSceneTarget(controls, mapTarget.x, mapTarget.y, mapTarget.z);
     }
 
+    // 保存地图摄像机的原始状态（动画会移动它，返回地图时需恢复）
+    mapCameraOriginalPos.copy(mapCamera.position);
+    mapCameraOriginalTarget.copy(mapTarget);
+
     floorView = await createFloorView(scene);
     setupPicker();
-    onStatus("点击 1号教学楼进入楼层选择；其他楼栋可查看信息。");
+    onStatus("点击任意楼栋进入楼层选择。");
     animate();
   }
 
@@ -80,7 +111,31 @@ export function createAppScene({ canvas, onStatus, onBuildingClick, onFloorClick
       onClick: (id) => {
         if (!id) return;
         if (mode === "map") {
-          onBuildingClick(id);
+          const targetMeshes = buildingGroups.get(id);
+          if (targetMeshes && targetMeshes.length > 0 && !cameraAnimator.isAnimating()) {
+            // 保存动画前的地图摄像机状态
+            mapCameraOriginalPos.copy(mapCamera.position);
+            mapCameraOriginalTarget.copy(controls.target);
+
+            const center = computeMeshCenter(targetMeshes);
+
+            // 动画终点 = 楼层摄像机位置，确保最后一帧与静止时一致
+            const endPos = new THREE.Vector3(
+              center.x + 26, center.y + 16, center.z + 48
+            );
+
+            const pathOptions = {
+              totalFrames: 60,
+              customEndPos: endPos,
+              customLookAt: center.clone(),
+            };
+
+            const pathData = createFlightPath(activeCamera, targetMeshes, pathOptions);
+            pendingBuildingClick = () => onBuildingClick(id);
+            cameraAnimator.start(pathData);
+          } else {
+            onBuildingClick(id);
+          }
           return;
         }
         onFloorClick(id);
@@ -91,8 +146,13 @@ export function createAppScene({ canvas, onStatus, onBuildingClick, onFloorClick
   function showMap() {
     mode = "map";
     activeCamera = mapCamera;
+
+    // 恢复地图摄像机原始位置和朝向
+    mapCamera.position.copy(mapCameraOriginalPos);
+    mapCamera.lookAt(mapCameraOriginalTarget);
+
     controls.object = activeCamera;
-    setFixedSceneTarget(controls, mapTarget.x, mapTarget.y, mapTarget.z);
+    setFixedSceneTarget(controls, mapCameraOriginalTarget.x, mapCameraOriginalTarget.y, mapCameraOriginalTarget.z);
     mapRoot.visible = true;
     floorView.hide();
     highlightBuilding(null);
@@ -101,20 +161,26 @@ export function createAppScene({ canvas, onStatus, onBuildingClick, onFloorClick
 
   function showBuildingFloors(buildingId) {
     const building = buildings.find((item) => item.id === buildingId);
-    if (buildingId !== "teaching-1") {
-      highlightBuilding(buildingId);
-      onStatus(`${building?.name ?? "该楼栋"} 的楼层模型将在后续复用生成。`);
-      return;
-    }
+    if (!building) return;
+
+    // 根据建筑的实际 mesh 计算中心，动态定位楼层摄像机
+    const meshes = buildingGroups.get(buildingId);
+    const center = meshes && meshes.length > 0
+      ? computeMeshCenter(meshes)
+      : new THREE.Vector3(4, 6, 0);
+
+    // 将楼层摄像机放到建筑前方 + 上方
+    floorCamera.position.set(center.x + 26, center.y + 16, center.z + 48);
+    floorCamera.lookAt(center);
 
     mode = "floors";
     activeCamera = floorCamera;
     controls.object = activeCamera;
-    setFixedSceneTarget(controls, 4, 6, 0);
+    setFixedSceneTarget(controls, center.x, center.y, center.z);
     mapRoot.visible = false;
-    floorView.show();
+    floorView.show(buildingId);
     floorView.clearHighlight();
-    onStatus("1号教学楼楼层选择：悬停楼层高亮，点击楼层查看房间。");
+    onStatus(`${building?.name ?? buildingId} 楼层选择：悬停高亮，点击查看房间。`);
   }
 
   function selectFloor(floorId) {
@@ -132,7 +198,9 @@ export function createAppScene({ canvas, onStatus, onBuildingClick, onFloorClick
 
   function animate() {
     requestAnimationFrame(animate);
-    controls.update();
+    if (!cameraAnimator.isAnimating()) {
+      controls.update();
+    }
     renderer.render(scene, activeCamera);
   }
 

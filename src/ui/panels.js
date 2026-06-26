@@ -36,7 +36,7 @@ function renderMapPanel(target, state, onSelectBuilding) {
   target.innerHTML = `
     <p class="panel-kicker">建筑群地图</p>
     <h2 class="panel-title">综合教学楼 1-6号</h2>
-    <p class="panel-copy">点击具体楼栋进入楼层选择。第一版完整链路优先支持 1号教学楼。</p>
+    <p class="panel-copy">点击楼栋进入楼层选择，再点击楼层查看教室详情。</p>
     <div class="stats">
       <div class="stat"><strong>6</strong><span>楼栋</span></div>
       <div class="stat"><strong>${buildings.reduce((sum, building) => sum + building.onlineUsers, 0)}</strong><span>在线</span></div>
@@ -61,11 +61,9 @@ function renderBuildingFloorsPanel(target, state, onSelectFloor) {
       <div class="stat"><strong>${building?.onlineUsers ?? 0}</strong><span>在线</span></div>
       <div class="stat"><strong>${building?.roomCount ?? 0}</strong><span>房间</span></div>
     </div>
-    ${
-      state.selectedBuildingId === "teaching-1"
-        ? `<div class="list">${buildingFloors.map((floor) => floorButton(floor, state.selectedFloorId)).join("")}</div>`
-        : `<p class="panel-copy">这栋楼的楼层模型将在 1号教学楼链路验证后复用生成。</p>`
-    }
+    <div class="list">
+      ${buildingFloors.map((floor) => floorButton(floor, state.selectedFloorId)).join("")}
+    </div>
   `;
   bindButtons(target, "[data-floor-id]", (button) => onSelectFloor(button.dataset.floorId));
 }
