@@ -144,6 +144,7 @@ export function createCameraAnimator(config = {}) {
   let rafId = null;
   let startTime = 0;
   let frameInterval = 1000 / fps;
+  let perAnimComplete = null; // 每次动画独立的完成回调
 
   function animate(timestamp) {
     if (!animating) return;
@@ -177,7 +178,7 @@ export function createCameraAnimator(config = {}) {
     rafId = requestAnimationFrame(animate);
   }
 
-  function start(pathData) {
+  function start(pathData, completeCallback) {
     if (animating) {
       cancelAnimationFrame(rafId);
     }
@@ -187,6 +188,7 @@ export function createCameraAnimator(config = {}) {
     currentFrame = 0;
     startTime = 0;
     animating = true;
+    perAnimComplete = completeCallback ?? null;
 
     onStart?.();
     rafId = requestAnimationFrame(animate);
@@ -210,6 +212,11 @@ export function createCameraAnimator(config = {}) {
     }
 
     onComplete?.();
+
+    // 执行每次动画独立的完成回调
+    const cb = perAnimComplete;
+    perAnimComplete = null;
+    cb?.();
   }
 
   function isAnimating() {

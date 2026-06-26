@@ -1,10 +1,12 @@
 import * as THREE from "three";
 import { buildings, getFloorsForBuilding } from "../data/teachingComplex.js";
-import { loadGltf } from "./assets.js";
 
-export async function createFloorView(scene) {
-  const gltf = await loadGltf("/assets/glb/teaching_complex_1_6.glb");
-  const root = gltf.scene;
+/**
+ * 从已加载的 GLTF scene 中提取楼层视图数据
+ * 避免重复加载模型文件
+ */
+export function createFloorView(scene, gltfScene) {
+  const root = gltfScene.clone();
   root.name = "floor_view_root";
   root.visible = false;
   root.position.set(0, -1, 0);

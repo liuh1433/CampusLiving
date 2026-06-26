@@ -24,6 +24,11 @@ const panels = createPanels({
   },
   onSelectRoom: (roomId) => {
     updateState(selectRoom(appState, roomId));
+    scene.showClassroomInterior(roomId);
+  },
+  onBackFromRoom: () => {
+    updateState(goBackToFloors(appState));
+    scene.showBuildingFloors(appState.selectedBuildingId);
   },
 });
 
@@ -45,6 +50,7 @@ const scene = createAppScene({
 backMapButton.addEventListener("click", () => {
   if (appState.mode === "room") {
     updateState(goBackToFloors(appState));
+    scene.showBuildingFloors(appState.selectedBuildingId);
     return;
   }
   updateState(goBackToMap(appState));

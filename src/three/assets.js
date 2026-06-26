@@ -4,7 +4,29 @@ import { buildings } from "../data/teachingComplex.js";
 const loader = new GLTFLoader();
 
 export async function loadGltf(url) {
-  return await loader.loadAsync(url);
+  return new Promise((resolve, reject) => {
+    const timeout = setTimeout(() => {
+      reject(new Error(`模型加载超时: ${url}（请检查文件是否存在或网络连接）`));
+    }, 15000);
+
+    loader.load(
+      url,
+      (gltf) => {
+        clearTimeout(timeout);
+        resolve(gltf);
+      },
+      (progress) => {
+        if (progress.total > 0) {
+          const pct = Math.round((progress.loaded / progress.total) * 100);
+          console.log(`[GLTF] ${url} 加载进度: ${pct}%`);
+        }
+      },
+      (error) => {
+        clearTimeout(timeout);
+        reject(error);
+      },
+    );
+  });
 }
 
 export function assignBuildingIds(root) {

@@ -102,6 +102,13 @@ h1 {
   background: rgba(250, 250, 246, 0.94);
   box-shadow: 0 18px 40px rgba(24, 36, 32, 0.22);
   overflow: auto;
+  transition: width 0.3s ease;
+}
+
+.side-panel--room {
+  width: min(640px, calc(100vw - 36px));
+  padding: 0;
+  overflow: hidden;
 }
 
 .panel-kicker {
@@ -188,21 +195,68 @@ h1 {
 }
 
 .room-card {
+  width: 100%;
   padding: 10px;
   border: 1px solid #dde7e1;
   border-radius: 8px;
   background: #ffffff;
+  cursor: pointer;
+  text-align: left;
+  font: inherit;
+  transition: border-color 0.15s, transform 0.15s, box-shadow 0.15s;
+}
+
+.room-card.room-full {
+  opacity: 0.6;
 }
 
 .room-card h3 {
-  margin: 0 0 6px;
+  margin: 0;
   font-size: 15px;
+}
+
+.room-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.room-card:hover {
+  border-color: #61a786;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
 }
 
 .room-card p {
   margin: 0;
   color: #61716c;
   font-size: 13px;
+}
+
+.room-seats-tag {
+  display: inline-flex;
+  align-items: center;
+  min-height: 22px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.room-seats-tag.available {
+  color: #276348;
+  background: #d4edda;
+  border: 1px solid #c3e6cb;
+}
+
+.room-seats-tag.full {
+  color: #721c24;
+  background: #f8d7da;
+  border: 1px solid #f5c6cb;
 }
 
 .bottom-bar {

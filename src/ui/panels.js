@@ -1,21 +1,62 @@
 import { buildings, floors, getBuildingById, getFloorsForBuilding, getRoomsForFloor, rooms } from "../data/teachingComplex.js";
+import { createClassroomApp } from "../classroom/classroomApp.js";
 
-export function createPanels({ sidePanel, identityPill, onSelectBuilding, onSelectFloor, onSelectRoom }) {
+export function createPanels({ sidePanel, identityPill, onSelectBuilding, onSelectFloor, onSelectRoom, onBackFromRoom }) {
+  let classroomApp = null;
+
+  function disposeClassroom() {
+    if (classroomApp) {
+      classroomApp.dispose();
+      classroomApp = null;
+    }
+  }
+
+  function renderRoomPanel(target, state) {
+    // 先销毁旧实例
+    disposeClassroom();
+
+    // 教室模式：展开侧面板
+    target.classList.add("side-panel--room");
+
+    // 同步创建教室
+    try {
+      classroomApp = createClassroomApp({
+        container: target,
+        roomId: state.selectedRoomId,
+        user: state.user,
+        onBack: () => {
+          target.classList.remove("side-panel--room");
+          disposeClassroom();
+          onBackFromRoom?.();
+        },
+      });
+    } catch (err) {
+      console.error("[Classroom] 创建失败:", err);
+      target.innerHTML = `<p class="classroom-error">教室加载失败: ${err.message}</p>`;
+    }
+  }
+
   return {
     render(state) {
       renderIdentity(identityPill, state.user);
 
       if (state.mode === "map") {
+        disposeClassroom();
+        sidePanel.classList.remove("side-panel--room");
         renderMapPanel(sidePanel, state, onSelectBuilding);
         return;
       }
 
       if (state.mode === "buildingFloors") {
+        disposeClassroom();
+        sidePanel.classList.remove("side-panel--room");
         renderBuildingFloorsPanel(sidePanel, state, onSelectFloor);
         return;
       }
 
       if (state.mode === "floorRooms") {
+        disposeClassroom();
+        sidePanel.classList.remove("side-panel--room");
         renderFloorRoomsPanel(sidePanel, state, onSelectRoom);
         return;
       }
@@ -36,7 +77,7 @@ function renderMapPanel(target, state, onSelectBuilding) {
   target.innerHTML = `
     <p class="panel-kicker">建筑群地图</p>
     <h2 class="panel-title">综合教学楼 1-6号</h2>
-    <p class="panel-copy">点击楼栋进入楼层选择，再点击楼层查看教室详情。</p>
+    <p class="panel-copy">点击楼栋查看楼层，选择教室查看空闲座位。</p>
     <div class="stats">
       <div class="stat"><strong>6</strong><span>楼栋</span></div>
       <div class="stat"><strong>${buildings.reduce((sum, building) => sum + building.onlineUsers, 0)}</strong><span>在线</span></div>
@@ -72,38 +113,38 @@ function renderFloorRoomsPanel(target, state, onSelectRoom) {
   const floor = floors[state.selectedFloorId];
   const building = getBuildingById(state.selectedBuildingId);
   const floorRooms = getRoomsForFloor(state.selectedFloorId);
+
   target.innerHTML = `
     <p class="panel-kicker">${building?.name ?? ""}</p>
     <h2 class="panel-title">${floor?.label ?? "楼层"} 房间</h2>
-    <p class="panel-copy">选择房间后进入座位与聊天原型。当前为本地模拟数据。</p>
+    <p class="panel-copy">选择房间查看空闲座位，进入自习室。</p>
     <div class="list">
       ${floorRooms
         .map(
-          (room) => `
-          <button class="room-card" type="button" data-room-id="${room.id}">
-            <h3>${room.name}</h3>
-            <p>${roomType(room.type)} · ${room.onlineUsers}/${room.capacity} 人 · 空座 ${room.availableSeats}</p>
+          (room) => {
+            const availabilityClass = room.availableSeats > 0 ? "room-available" : "room-full";
+            const availabilityText = room.availableSeats > 0
+              ? `<span class="room-seats-tag available">空闲 ${room.availableSeats} 座</span>`
+              : `<span class="room-seats-tag full">已满</span>`;
+            return `
+          <button class="room-card ${availabilityClass}" type="button" data-room-id="${room.id}">
+            <div class="room-card-header">
+              <h3>${room.name}</h3>
+              ${availabilityText}
+            </div>
+            <p>${roomType(room.type)} · ${room.onlineUsers}/${room.capacity} 人</p>
           </button>
-        `,
+        `;
+          },
         )
         .join("")}
     </div>
   `;
-  bindButtons(target, "[data-room-id]", (button) => onSelectRoom(button.dataset.roomId));
-}
 
-function renderRoomPanel(target, state) {
-  const room = rooms[state.selectedRoomId];
-  target.innerHTML = `
-    <p class="panel-kicker">房间占位</p>
-    <h2 class="panel-title">${room?.name ?? "房间"}</h2>
-    <p class="panel-copy">座位图和聊天面板会在下一阶段接入。当前先完成空间路径闭环。</p>
-    <div class="stats">
-      <div class="stat"><strong>${room?.onlineUsers ?? 0}</strong><span>在线</span></div>
-      <div class="stat"><strong>${room?.availableSeats ?? 0}</strong><span>空座</span></div>
-      <div class="stat"><strong>${room?.capacity ?? 0}</strong><span>容量</span></div>
-    </div>
-  `;
+  // 绑定房间卡片点击
+  target.querySelectorAll("[data-room-id]").forEach((btn) => {
+    btn.addEventListener("click", () => onSelectRoom(btn.dataset.roomId));
+  });
 }
 
 function buildingButton(building, selectedBuildingId) {
