@@ -29,7 +29,7 @@ export function createIdentity(index = 0) {
 export function selectBuilding(state, buildingId) {
   return {
     ...state,
-    mode: "buildingFloors",
+    mode: buildingId === "library-jinming" ? "buildingExterior" : "buildingFloors",
     selectedBuildingId: buildingId,
     hoveredBuildingId: null,
     selectedFloorId: null,

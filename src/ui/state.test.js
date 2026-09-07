@@ -2,6 +2,12 @@ import { describe, expect, it } from "vitest";
 import { createInitialState, selectBuilding, selectFloor, goBackToMap } from "./state.js";
 
 describe("app state transitions", () => {
+  it("opens the library as an exterior, without fabricated floors", () => {
+    const next = selectBuilding(createInitialState(), "library-jinming");
+    expect(next.mode).toBe("buildingExterior");
+    expect(next.selectedFloorId).toBeNull();
+    expect(goBackToMap(next).selectedBuildingId).toBeNull();
+  });
   it("selects a building and enters the floor selection mode", () => {
     const state = createInitialState();
     const next = selectBuilding(state, "teaching-1");

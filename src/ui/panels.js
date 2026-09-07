@@ -47,6 +47,19 @@ export function createPanels({ sidePanel, identityPill, onSelectBuilding, onSele
         return;
       }
 
+      if (state.mode === "buildingExterior") {
+        disposeClassroom();
+        sidePanel.classList.remove("side-panel--room");
+        sidePanel.innerHTML = `
+          <p class="panel-kicker">校园空间 / 图书馆</p>
+          <h2 class="panel-title">金明校区图书馆</h2>
+          <img class="library-panel-preview" src="/assets/previews/library_jinming_front_oblique.webp" alt="图书馆正面凹入幕墙" />
+          <dl class="building-facts"><div><dt>位置</dt><dd>马可广场西侧</dd></div><div><dt>入口朝向</dt><dd>西大门</dd></div><div><dt>模型范围</dt><dd>建筑外观</dd></div><div><dt>室内空间</dt><dd>尚未建模</dd></div></dl>
+          <a class="building-detail-link" href="/library.html">打开图书馆独立视图</a>
+        `;
+        return;
+      }
+
       if (state.mode === "buildingFloors") {
         disposeClassroom();
         sidePanel.classList.remove("side-panel--room");
@@ -75,17 +88,18 @@ function renderIdentity(target, user) {
 
 function renderMapPanel(target, state, onSelectBuilding) {
   target.innerHTML = `
-    <p class="panel-kicker">建筑群地图</p>
-    <h2 class="panel-title">综合教学楼 1-6号</h2>
-    <p class="panel-copy">点击楼栋查看楼层，选择教室查看空闲座位。</p>
+    <p class="panel-kicker">校园空间</p>
+    <h2 class="panel-title">图书馆与教学区</h2>
     <div class="stats">
-      <div class="stat"><strong>6</strong><span>楼栋</span></div>
-      <div class="stat"><strong>${buildings.reduce((sum, building) => sum + building.onlineUsers, 0)}</strong><span>在线</span></div>
-      <div class="stat"><strong>${buildings.reduce((sum, building) => sum + building.roomCount, 0)}</strong><span>房间</span></div>
+      <div class="stat"><strong>7</strong><span>已建模建筑</span></div>
+      <div class="stat"><strong>${buildings.reduce((sum, building) => sum + building.onlineUsers, 0)}</strong><span>模拟在线</span></div>
     </div>
     <div class="list">
+      <button class="list-button library-list-button" type="button" data-building-id="library-jinming"><span>图书馆</span><span class="tag">外观模型</span></button>
       ${buildings.map((building) => buildingButton(building, state.selectedBuildingId)).join("")}
     </div>
+    <div class="map-key"><span><i class="key-model"></i>已建模</span><span><i class="key-plan"></i>平面底图</span></div>
+    <a class="building-detail-link" href="/library.html">打开图书馆独立视图</a>
   `;
   bindButtons(target, "[data-building-id]", (button) => onSelectBuilding(button.dataset.buildingId));
 }
@@ -117,7 +131,7 @@ function renderFloorRoomsPanel(target, state, onSelectRoom) {
   target.innerHTML = `
     <p class="panel-kicker">${building?.name ?? ""}</p>
     <h2 class="panel-title">${floor?.label ?? "楼层"} 房间</h2>
-    <p class="panel-copy">选择房间查看空闲座位，进入自习室。</p>
+    <p class="panel-copy">模拟房间与座位状态</p>
     <div class="list">
       ${floorRooms
         .map(
@@ -151,8 +165,8 @@ function buildingButton(building, selectedBuildingId) {
   const active = building.id === selectedBuildingId ? " active" : "";
   return `
     <button class="list-button${active}" type="button" data-building-id="${building.id}">
-      <span>${building.name}</span>
-      <span class="tag">${building.onlineUsers} 在线</span>
+      <span>${building.shortName}教学楼</span>
+      <span class="tag">${building.onlineUsers} 人</span>
     </button>
   `;
 }

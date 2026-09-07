@@ -1,0 +1,24 @@
+{
+  "source": "User-supplied jmxq.jpg, Henan University Jinming campus schematic",
+  "sourceSize": [
+    6398,
+    8267
+  ],
+  "reference": {
+    "width": 1376,
+    "height": 1777,
+    "crop": [
+      46,
+      203,
+      1278,
+      1523
+    ]
+  },
+  "crop": {
+    "left": 214,
+    "top": 944,
+    "width": 5942,
+    "height": 7085
+  },
+  "accuracy": "Schematic registration only; no measured geographic coordinates"
+}

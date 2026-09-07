@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#f4f5f4" />
+    <meta name="description" content="河南大学金明校区图书馆建筑外观模型" />
+    <title>河南大学图书馆 · CampusLiving</title>
+    <link rel="icon" href="data:," />
+  </head>
+  <body>
+    <main id="library-app" data-state="loading">
+      <canvas id="library-canvas" aria-label="河南大学图书馆三维建筑模型" tabindex="0"></canvas>
+
+      <header class="library-header" id="library-header">
+        <div class="heading-row">
+          <a class="back-link" href="/" aria-label="返回校园">
+            <span data-icon="arrow-left"></span><span>校园</span>
+          </a>
+          <span class="wordmark">CampusLiving<span class="wordmark-dot" aria-hidden="true">.</span></span>
+        </div>
+        <div class="title-row">
+          <div class="title-block">
+            <p class="campus-label">河南大学 <span aria-hidden="true">/</span> 金明校区</p>
+            <h1>河南大学图书馆</h1>
+          </div>
+          <dl class="dimensions" aria-label="建筑近似尺寸">
+            <div><dt>宽</dt><dd><span id="dimension-width">约 100</span><small>m</small></dd></div>
+            <div><dt>进深</dt><dd><span id="dimension-depth">约 70</span><small>m</small></dd></div>
+            <div><dt>高</dt><dd><span id="dimension-height">约 45</span><small>m</small></dd></div>
+          </dl>
+        </div>
+      </header>
+
+      <section class="load-state" id="load-state" role="status" aria-live="polite" aria-atomic="true">
+        <span class="load-icon" id="load-icon" data-icon="loader-circle"></span>
+        <h2 id="load-title">正在加载图书馆</h2>
+        <p id="load-detail">正在读取模型</p>
+        <progress id="load-progress" max="100" aria-label="模型加载进度"></progress>
+        <button class="retry-button" id="retry-button" type="button" hidden>
+          <span data-icon="rotate-ccw"></span>重新加载
+        </button>
+      </section>
+
+      <div class="viewer-bottom" id="viewer-bottom">
+        <div class="view-status" aria-hidden="true">
+          <span class="orientation"><span data-icon="compass" id="orientation-icon"></span><span id="current-view">整体视角</span></span>
+          <span class="model-status" id="model-status">模型加载中</span>
+        </div>
+        <div class="viewer-toolbar" role="group" aria-label="模型视图与显示选项">
+          <label class="view-select-wrap" for="view-select">
+            <span class="select-label">视角</span>
+            <select id="view-select" disabled aria-label="选择建筑视角">
+              <option value="isometric">整体视角</option>
+              <option value="front">正立面</option>
+              <option value="back">背立面</option>
+              <option value="left">左立面</option>
+              <option value="right">右立面</option>
+              <option value="top">屋顶俯瞰</option>
+              <option value="free" disabled hidden>自由视角</option>
+            </select>
+            <span class="select-chevron" data-icon="chevron-down"></span>
+          </label>
+          <div class="toolbar-tools">
+            <div class="tool-group" role="group" aria-label="模型显示">
+              <button class="tool-button" id="auto-rotate" type="button" role="switch" aria-checked="false" aria-label="自动旋转" data-tooltip="自动旋转" disabled><span data-icon="rotate-3d"></span></button>
+              <button class="tool-button" id="roof-toggle" type="button" role="switch" aria-checked="true" aria-label="显示屋顶" data-tooltip="显示屋顶" disabled><span data-icon="house"></span></button>
+              <button class="tool-button" id="site-toggle" type="button" role="switch" aria-checked="true" aria-label="显示场地" data-tooltip="显示场地" disabled><span data-icon="trees"></span></button>
+            </div>
+            <div class="tool-group zoom-group" role="group" aria-label="缩放">
+              <button class="tool-button" id="zoom-out" type="button" aria-label="缩小" data-tooltip="缩小" disabled><span data-icon="minus"></span></button>
+              <button class="tool-button" id="zoom-in" type="button" aria-label="放大" data-tooltip="放大" disabled><span data-icon="plus"></span></button>
+            </div>
+            <div class="tool-group" role="group" aria-label="复位与导出">
+              <button class="tool-button" id="reset-view" type="button" aria-label="复位视角" data-tooltip="复位视角" disabled><span data-icon="rotate-ccw"></span></button>
+              <button class="tool-button" id="capture-view" type="button" aria-label="保存当前视图" data-tooltip="保存当前视图" disabled><span data-icon="camera"></span></button>
+              <a class="tool-button" id="download-model" href="/assets/glb/library_jinming.glb" download="library_jinming.glb" aria-label="下载模型" data-tooltip="下载模型" aria-disabled="true" tabindex="-1"><span data-icon="download"></span></a>
+            </div>
+          </div>
+        </div>
+        <footer class="viewer-caption"><span>参考图重建 · 外观模型</span><span class="caption-place">中国 · 开封</span></footer>
+      </div>
+      <div class="toast" id="viewer-toast" role="status" aria-live="polite" hidden></div>
+      <noscript><p class="noscript-message">请启用 JavaScript 以查看图书馆模型。</p></noscript>
+    </main>
+    <script type="module" src="/src/library/main.js"></script>
+  </body>
+</html>

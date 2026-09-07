@@ -2,28 +2,35 @@
 <html lang="zh-CN">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>综合教学楼空间社交原型</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>空间共鸣 · 河南大学金明校区</title>
     <link rel="icon" href="data:," />
   </head>
   <body>
-    <div id="app">
-      <canvas id="scene-canvas"></canvas>
-
+    <div id="app" data-mode="map" data-loading="true">
       <header class="topbar">
-        <div>
-          <div class="eyebrow">河南大学金明校区</div>
-          <h1>综合教学楼空间社交原型</h1>
-        </div>
+        <div class="campus-heading"><h1>空间共鸣<span>CampusLiving</span></h1><div class="eyebrow">河南大学 · 金明校区</div></div>
         <div class="identity" id="identity-pill"></div>
       </header>
-
-      <aside class="side-panel" id="side-panel"></aside>
-
-      <div class="bottom-bar">
-        <button class="icon-text-button" id="back-map-button" type="button">返回建筑群</button>
-        <span id="status-text">加载综合教学楼模型...</span>
+      <div id="scene-stage">
+        <canvas id="scene-canvas" aria-label="金明校区三维校园地图" tabindex="0"></canvas>
+        <div id="building-labels" aria-label="校园建筑"></div>
+        <div class="campus-map-tools" role="group" aria-label="校园地图视图">
+          <label class="campus-view-select">视角<select id="campus-view" disabled><option value="core">图书馆与教学区</option><option value="top">核心区俯视</option><option value="campus">全校平面</option></select></label>
+          <label class="map-layer"><input type="checkbox" id="map-layer" checked disabled />底图</label>
+          <button class="map-tool" id="campus-zoom-out" aria-label="缩小" title="缩小" disabled><span data-icon="minus"></span></button>
+          <button class="map-tool" id="campus-zoom-in" aria-label="放大" title="放大" disabled><span data-icon="plus"></span></button>
+          <button class="map-tool" id="campus-reset" aria-label="复位校园视角" title="复位校园视角" disabled><span data-icon="rotate-ccw"></span></button>
+          <button class="map-tool" id="campus-capture" aria-label="保存校园视图" title="保存校园视图" disabled><span data-icon="camera"></span></button>
+        </div>
+        <div class="campus-load-error" id="campus-load-error" role="alert" hidden>校园资源加载失败<button type="button" id="campus-retry">重新加载</button></div>
       </div>
+      <aside class="side-panel" id="side-panel" aria-label="空间列表"></aside>
+      <footer class="bottom-bar">
+        <button class="icon-text-button" id="back-map-button" type="button"><span data-icon="arrow-left"></span><span>返回校园</span></button>
+        <span id="status-text" role="status">正在加载校园底图与建筑</span>
+        <span class="simulation-status">在线与座位数据为模拟</span>
+      </footer>
     </div>
     <script type="module" src="/src/main.js"></script>
   </body>
